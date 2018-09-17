@@ -1,7 +1,7 @@
 # Личный проект «Кэндишоп» [![Build status][travis-image]][travis-url]
 
 * Студент: [Ярослав Макаренко](https://up.htmlacademy.ru/javascript/15/user/234926).
-* Наставник: `Неизвестно`.
+* Наставник: `Без наставника`.
 
 ---
 
