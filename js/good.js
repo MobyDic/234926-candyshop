@@ -297,14 +297,58 @@ function clickPaymentHandler(evt) {
   }
 }
 
-/*
-var aArr = a.split('');
 
-var b = aArr.map(function(item, i){
-  var currentItem = (i % 2 === 0) ? +item * 2 : +item;
-  return (currentItem >= 10) ? currentItem - 9 : currentItem;
-}).reduce(function(sum, item) {
-  return sum +=item;
-}, 0)
-*/
+// валидация карты
+
+var CARD_VALIDATION_OK_MESSAGE = 'Одобрен';
+var CARD_VALIDATION_ERROR_MESSAGE = 'Неизвестен';
+var CARD_NUMBER_ERROR_MESSAGE = 'Неправильный номер банковской карты';
+
+var checkCardData = function (cardDataFields, paymentCardNumber) {
+  var result = {
+    customCardValidityMessage: '',
+    isValid: true,
+    message: CARD_VALIDATION_OK_MESSAGE
+  };
+
+  for (var i = 0; i < cardDataFields.length; i++) {
+    if (!cardDataFields[i].checkValidity()) {
+      result.isValid = false;
+      result.message = CARD_VALIDATION_ERROR_MESSAGE;
+      break;
+    }
+  }
+
+  if (result.isValid) {
+    result.isValid = checkLuhn(paymentCardNumber.value);
+    if (!result.isValid) {
+
+      result.customCardValidityMessage = CARD_NUMBER_ERROR_MESSAGE;
+    }
+  }
+
+  return result;
+};
+
+function checkLuhn(number) {
+
+  var numberArr = number.split('');
+
+  var sumOfNumbers = numberArr.map(function (item, i) {
+    var currentItem = (i % 2 === 0) ? +item * 2 : +item;
+    return (currentItem >= 10) ? currentItem - 9 : currentItem;
+  }).reduce(function (sum, item) {
+    return sum + item;
+  }, 0);
+  return sumOfNumbers % 10 === 0;
+}
+
+var paymentInputs = document.querySelector('.payment__inputs');
+var paymentCardNumber = paymentInputs.querySelector('#payment__card-number');
+var paymentCardStatus = paymentInputs.querySelector('.payment__card-status');
+
+
+paymentInputs.addEventListener('input', function () {
+  paymentCardStatus.innerText = checkCardData(paymentInputs, paymentCardNumber).customCardValidityMessage;
+});
 
