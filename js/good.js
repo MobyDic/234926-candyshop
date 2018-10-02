@@ -64,21 +64,23 @@ var catalogLoad = catalogCards.querySelector('.catalog__load');
 catalogCards.classList.remove('catalog_cards--load');
 catalogLoad.classList.add('visually-hidden');
 
+generateGoodsArray();
+
 function makeCatalogElements(i) {
 
   var catalogCardTamplate = document.querySelector('#card').content.querySelector('.catalog__card');
 
   var cardElement = catalogCardTamplate.cloneNode(true);
 
-  cardElement.querySelector('.card__title').innerText = generateGoodsArray()[i].names;
-  cardElement.querySelector('.card__img').src = generateGoodsArray()[i].picture;
-  cardElement.querySelector('.card__price').innerHTML = generateGoodsArray()[i].price + ' <span class="card__currency">₽</span><span class="card__weight">/ ' + generateGoodsArray()[i].weigth + ' Г</span>';
+  cardElement.querySelector('.card__title').innerText = goodsArray[i].names;
+  cardElement.querySelector('.card__img').src = goodsArray[i].picture;
+  cardElement.querySelector('.card__price').innerHTML = goodsArray[i].price + ' <span class="card__currency">₽</span><span class="card__weight">/ ' + goodsArray[i].weigth + ' Г</span>';
 
   cardElement.classList.remove('card--in-stock');
-  if (generateGoodsArray()[i].amount > 5) {
+  if (goodsArray[i].amount > 5) {
     cardElement.classList.add('card--in-stock');
   } else {
-    if (generateGoodsArray()[i].amount >= 1 && generateGoodsArray()[i].amount <= 5) {
+    if (goodsArray[i].amount >= 1 && goodsArray[i].amount <= 5) {
       cardElement.classList.add('card--little');
     } else {
       cardElement.classList.add('card--soon');
@@ -87,12 +89,12 @@ function makeCatalogElements(i) {
 
   var starRaiting = cardElement.querySelector('.stars__rating');
   starRaiting.classList.remove('stars__rating--five');
-  starRaiting.classList.add('stars__rating--' + RAITING_START[generateGoodsArray()[i].rating.value]);
+  starRaiting.classList.add('stars__rating--' + RAITING_START[goodsArray[i].rating.value]);
 
 
-  cardElement.querySelector('.star__count').innerText = generateGoodsArray()[i].rating.number;
-  cardElement.querySelector('.card__characteristic').innerText = (generateGoodsArray()[i].nutritionFacts.sugar) ? 'С сахаром' : 'Без сахара';
-  cardElement.querySelector('.card__composition-list').innerText = generateGoodsArray()[i].nutritionFacts.contents;
+  cardElement.querySelector('.star__count').innerText = goodsArray[i].rating.number;
+  cardElement.querySelector('.card__characteristic').innerText = (goodsArray[i].nutritionFacts.sugar) ? 'С сахаром' : 'Без сахара';
+  cardElement.querySelector('.card__composition-list').innerText = goodsArray[i].nutritionFacts.contents;
   cardElement.querySelector('.card__btn').dataset.index = i;
   return cardElement;
 }
@@ -323,7 +325,7 @@ var checkCardData = function (cardDataFields, paymentCardNumber) {
     result.isValid = checkLuhn(paymentCardNumber.value);
     if (!result.isValid) {
 
-      result.customCardValidityMessage = CARD_NUMBER_ERROR_MESSAGE;
+      result.message = CARD_NUMBER_ERROR_MESSAGE;
     }
   }
 
@@ -349,6 +351,103 @@ var paymentCardStatus = paymentInputs.querySelector('.payment__card-status');
 
 
 paymentInputs.addEventListener('input', function () {
-  paymentCardStatus.innerText = checkCardData(paymentInputs, paymentCardNumber).customCardValidityMessage;
+  paymentCardStatus.innerText = checkCardData(paymentInputs, paymentCardNumber).message;
 });
 
+// движение ползунков диапазона цен
+
+var rangeBtnLeft = document.querySelector('.range__btn--left');
+var rangeBtnRight = document.querySelector('.range__btn--right');
+var rangeFilter = document.querySelector('.range__filter');
+var rangeFilterLine = document.querySelector('.range__fill-line');
+var rangePriceMin = document.querySelector('.range__price--min');
+var rangePriceMax = document.querySelector('.range__price--max');
+
+rangeBtnLeft.addEventListener('mousedown', mousedownLeftBtnHandler);
+rangeBtnRight.addEventListener('mousedown', mousedownRightBtnHandler);
+
+var filterLength = rangeFilter.offsetWidth;
+viewRange(rangeBtnLeft.offsetLeft, rangePriceMin);
+viewRange(rangeBtnRight.offsetLeft, rangePriceMax);
+
+
+function mousedownLeftBtnHandler(evt) {
+  evt.preventDefault();
+
+  var startCoord = evt.clientX;
+
+  function mousemoveLeftBtnHandler(moveEvt) {
+    moveEvt.preventDefault();
+
+    var shift = startCoord - moveEvt.clientX;
+
+    startCoord = moveEvt.clientX;
+    var newBtnCoord = rangeBtnLeft.offsetLeft - shift;
+    var newLineCoord = rangeFilterLine.offsetLeft - shift;
+
+    if (newBtnCoord >= 0 && newBtnCoord < rangeBtnRight.offsetLeft) {
+
+      rangeBtnLeft.style.left = newBtnCoord + 'px';
+      viewRange(newBtnCoord, rangePriceMin);
+    }
+
+    rangeFilterLine.style.left = (newLineCoord >= 0 && newLineCoord < rangeBtnRight.offsetLeft) ? newLineCoord + 'px' : newLineCoord.offsetLeft + 'px';
+
+  }
+
+  function mouseupLeftBtnHandler(upEvt) {
+    upEvt.preventDefault();
+
+    document.removeEventListener('mousemove', mousemoveLeftBtnHandler);
+    document.removeEventListener('mouseup', mouseupLeftBtnHandler);
+
+  }
+
+  document.addEventListener('mousemove', mousemoveLeftBtnHandler);
+  document.addEventListener('mouseup', mouseupLeftBtnHandler);
+
+}
+
+function viewRange(coord, element) {
+  var maxPrice = Math.max.apply(null, goodsArray.map(function (item) {
+    return item.price;
+  }));
+  var price = Math.round(coord * maxPrice / filterLength);
+  element.textContent = price;
+}
+
+function mousedownRightBtnHandler(evt) {
+  evt.preventDefault();
+
+  var startCoord = evt.clientX;
+
+  function mousemoveRightBtnHandler(moveEvt) {
+    moveEvt.preventDefault();
+
+    var shift = startCoord - moveEvt.clientX;
+
+    startCoord = moveEvt.clientX;
+    var newBtnCoord = rangeBtnRight.offsetLeft - shift;
+
+    if (newBtnCoord <= filterLength && newBtnCoord >= rangeBtnLeft.offsetLeft) {
+
+      rangeBtnRight.style.left = newBtnCoord + 'px';
+      viewRange(newBtnCoord, rangePriceMax);
+    }
+
+    rangeFilterLine.style.right = filterLength - rangeBtnRight.offsetLeft + 'px';
+
+  }
+
+  function mouseupRightBtnHandler(upEvt) {
+    upEvt.preventDefault();
+
+    document.removeEventListener('mousemove', mousemoveRightBtnHandler);
+    document.removeEventListener('mouseup', mouseupRightBtnHandler);
+
+  }
+
+  document.addEventListener('mousemove', mousemoveRightBtnHandler);
+  document.addEventListener('mouseup', mouseupRightBtnHandler);
+
+}
