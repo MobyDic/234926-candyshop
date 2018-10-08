@@ -19,12 +19,12 @@
 
 
   function mousedownLeftBtnHandler(evt) {
-    evt.preventDefault();
+    // evt.preventDefault();
 
     var startCoord = evt.clientX;
 
     function mousemoveLeftBtnHandler(moveEvt) {
-      moveEvt.preventDefault();
+      // moveEvt.preventDefault();
 
       var shift = startCoord - moveEvt.clientX;
 
@@ -56,15 +56,18 @@
   }
 
   function viewRange(coord, element) {
-    var maxPrice = Math.max.apply(null, window.data.goodsArray.map(function (item) {
-      return item.price;
-    }));
-    var price = Math.round(coord * maxPrice / filterLength);
-    element.textContent = price;
+    // console.log(window.goodsArray)
+    if (window.goodsArray) {
+      var maxPrice = Math.max.apply(null, window.goodsArray.map(function (item) {
+        return item.price;
+      }));
+      var price = Math.round(coord * maxPrice / filterLength);
+      element.textContent = price;
+    }
+
   }
 
   function mousedownRightBtnHandler(evt) {
-    evt.preventDefault();
 
     var startCoord = evt.clientX;
 
